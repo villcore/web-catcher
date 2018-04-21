@@ -15,6 +15,16 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
     }
 
     @Override
+    protected boolean shouldTriggerNextPage() {
+        return false;
+    }
+
+    @Override
+    protected void triggerNextPage() {
+        executor.submit(this);
+    }
+
+    @Override
     protected void catchPageFinish() {
 
     }
@@ -138,8 +148,4 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
     protected RequestBundle loginRequest() {
         return null;
     }
-
-    //url
-    //pageUrl template
-    //loginUrl
 }

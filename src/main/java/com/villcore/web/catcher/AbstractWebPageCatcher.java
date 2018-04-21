@@ -144,9 +144,6 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
                 }
             });
         }
-        //wrap future tasks
-        //add hooks util finish, and trigger next process;
-
         if (System.currentTimeMillis() - lastCatch > SESSION_EXPIRED_TIME_MS) {
             stateEnum = CatcherStateEnum.EXPIRED;
         }
