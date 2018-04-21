@@ -6,27 +6,29 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultWebPageCatcher.class);
 
-    public DefaultWebPageCatcher(ExecutorService executor) {
-        super(executor);
+    private ExecutorService executor;
+    private ScheduledExecutorService scheduledExecutor;
+
+    private boolean shouldTriggerNextPage;
+    private String pageUrlTemplate;
+
+    private boolean needVerifyCode;
+
+    private boolean needLogin;
+    private boolean needReply;
+    private long replyInterval;
+
+    public DefaultWebPageCatcher(ExecutorService executor, ScheduledExecutorService scheduledExecutor) {
+        super(executor, scheduledExecutor);
     }
 
-    @Override
-    protected boolean shouldTriggerNextPage() {
-        return false;
-    }
-
-    @Override
-    protected void triggerNextPage() {
-        executor.submit(this);
-    }
-
-    @Override
-    protected void catchPageFinish() {
-
+    private String getPageUrl(long pageNum) {
+        return String.format(pageUrlTemplate, pageNum);
     }
 
     public void stop() {
@@ -50,13 +52,29 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
     }
 
     @Override
+    protected boolean shouldTriggerNextPage() {
+        return shouldTriggerNextPage;
+    }
+
+    @Override
+    protected void triggerNextPage() {
+        executor.submit(this);
+    }
+
+    @Override
+    protected void catchPageFinish() {
+        LOGGER.info("catch finish.");
+    }
+
+    @Override
     public Page nextPage() {
+        String pageUrl = getPageUrl(pageNum++);
         return null;
     }
 
     @Override
     public boolean needVerifyCode() {
-        return false;
+        return needVerifyCode;
     }
 
     @Override
@@ -66,12 +84,12 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
 
     @Override
     public boolean needReply() {
-        return false;
+        return needReply;
     }
 
     @Override
     public long replyInterval() {
-        return 0;
+        return replyInterval;
     }
 
     @Override

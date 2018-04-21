@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -33,9 +34,11 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
     protected int emptyPage;
 
     protected ExecutorService executor;
+    protected ScheduledExecutorService scheduledExecutor;
 
-    public AbstractWebPageCatcher(ExecutorService executor) {
+    public AbstractWebPageCatcher(ExecutorService executor, ScheduledExecutorService scheduledExecutor) {
         this.executor = executor;
+        this.scheduledExecutor = scheduledExecutor;
     }
 
     /** invoke multitmes */
@@ -120,33 +123,39 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
             return;
         }
 
-        AtomicInteger countDown = new AtomicInteger(itemList.size());
+        final AtomicInteger countDown = new AtomicInteger(itemList.size());
 
         for (Item item : itemList) {
             final RequestBundle itemRequest = needReply() ? itemRequest(item) : itemRequestWithReply(item);
-            CompletableFuture<ResponseBundle> completeResp = CompletableFuture.supplyAsync(()-> {
-                return request(itemRequest);
-            }, executor);
-            completeResp.thenAccept(new Consumer<ResponseBundle>() {
-                @Override
-                public void accept(ResponseBundle responseBundle) {
-                    Map<ContentTypeEnum, List<Content>> contents = parseContent(responseBundle);
-                    recordContents(contents);
-                    statis(contents);
-                    countDown.decrementAndGet();
-
-                    if (countDown.get() == 0) {
-                        catchPageFinish();
-                        if (shouldTriggerNextPage()) {
-                            triggerNextPage();
-                        }
-                    }
-                }
-            });
+            scheduledExecutor.schedule(() -> {
+                requestItemTask(itemRequest, countDown);
+            }, replyInterval(),TimeUnit.MILLISECONDS);
         }
         if (System.currentTimeMillis() - lastCatch > SESSION_EXPIRED_TIME_MS) {
             stateEnum = CatcherStateEnum.EXPIRED;
         }
+    }
+
+    private void requestItemTask(RequestBundle itemRequest, AtomicInteger countDown) {
+        CompletableFuture<ResponseBundle> completeResp = CompletableFuture.supplyAsync(()-> {
+            return request(itemRequest);
+        }, executor);
+        completeResp.thenAccept(new Consumer<ResponseBundle>() {
+            @Override
+            public void accept(ResponseBundle responseBundle) {
+                Map<ContentTypeEnum, List<Content>> contents = parseContent(responseBundle);
+                recordContents(contents);
+                statis(contents);
+                countDown.decrementAndGet();
+
+                if (countDown.get() == 0) {
+                    catchPageFinish();
+                    if (shouldTriggerNextPage()) {
+                        triggerNextPage();
+                    }
+                }
+            }
+        });
     }
 
     protected abstract boolean shouldTriggerNextPage();
