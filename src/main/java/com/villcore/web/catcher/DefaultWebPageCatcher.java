@@ -3,6 +3,7 @@ package com.villcore.web.catcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -13,6 +14,12 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
 
     private ExecutorService executor;
     private ScheduledExecutorService scheduledExecutor;
+
+    private Map<String, String> commonHeaders = new HashMap<>();
+    //login
+    //verify
+    //item
+    //reply
 
     private boolean shouldTriggerNextPage;
     private String pageUrlTemplate;
