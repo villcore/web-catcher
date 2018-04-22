@@ -9,6 +9,8 @@ public interface WebPageCatcher {
 
     boolean needVerifyCode();
 
+    ResponseBundle requestVerifyCode(RequestBundle requestBundle);
+
     boolean needLogin(ResponseBundle responseBundle);
 
     boolean needReply();
