@@ -13,11 +13,11 @@ public interface WebPageCatcher {
 
     boolean needLogin(ResponseBundle responseBundle);
 
+    boolean login(RequestBundle requestBundle);
+
     boolean needReply();
 
     long replyInterval();
-
-    boolean login(RequestBundle requestBundle);
 
     ResponseBundle request(RequestBundle requestBundle);
 
