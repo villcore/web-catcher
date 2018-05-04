@@ -95,7 +95,8 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
 
     @Override
     public boolean login(RequestBundle requestBundle) {
-        return checkLoginState();
+        //return checkLoginState();
+        return false;
     }
 
     @Override
