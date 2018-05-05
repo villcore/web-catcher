@@ -95,7 +95,8 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
 
     @Override
     public boolean login(RequestBundle requestBundle) {
-        return checkLoginState();
+        //return checkLoginState();
+        return false;
     }
 
     private boolean checkLoginState() {
@@ -122,14 +123,10 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
         return null;
     }
 
-    @Override
-    public ResponseBundle refresh(RequestBundle requestBundle) {
-        return null;
-    }
 
     @Override
-    public ResponseBundle reply(RequestBundle requestBundle) {
-        return null;
+    public boolean reply(RequestBundle requestBundle) {
+        return true;
     }
 
     @Override
