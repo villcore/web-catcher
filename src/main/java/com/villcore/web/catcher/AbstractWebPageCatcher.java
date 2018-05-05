@@ -15,23 +15,24 @@ import java.util.function.Consumer;
 public abstract class AbstractWebPageCatcher implements WebPageCatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractWebPageCatcher.class);
 
+    private static final long SESSION_EXPIRED_TIME_MS = TimeUnit.MILLISECONDS.convert(5L, TimeUnit.MINUTES);
+
     static enum CatcherStateEnum {
         NEW, NEED_LOGIN, LOGIN_SUCESS, LOGIN_FAILED, NORMAL, EXPIRED, PAUSE, STOP, FINISH
     }
 
-    private static final long SESSION_EXPIRED_TIME_MS = TimeUnit.MILLISECONDS.convert(15L, TimeUnit.MINUTES);
+    //stat, metrics
     private final long startup = System.currentTimeMillis();
-    private long lastCatch;
-    private long requestPages;
-    private long requestItems;
-    private Map<ContentTypeEnum, Long> contentCounts;
+    private long lastCatchTime;
+    private long totalRequestPages;
+    private long totalRequestItems;
+    private Map<ContentTypeEnum, Long> contentTotal;
 
-    private String verifyCode;
 
     protected volatile CatcherStateEnum stateEnum = CatcherStateEnum.NEW;
     protected long pageNum = 1;
     protected volatile boolean finish;
-    protected int emptyPage;
+    protected int emptyPageCount;
 
     protected ExecutorService executor;
     protected ScheduledExecutorService scheduledExecutor;
@@ -63,7 +64,7 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
             return;
         }
 
-        lastCatch = System.currentTimeMillis();
+        lastCatchTime = System.currentTimeMillis();
         int loginRetry = 0;
         Page page = nextPage();
 
@@ -187,6 +188,8 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
     protected abstract RequestBundle pageRequest(Page page);
 
     protected abstract RequestBundle loginRequest();
+
+    protected abstract long replyInterval();
 
     public long getStartup() {
         return startup;

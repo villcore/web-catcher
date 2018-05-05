@@ -119,14 +119,10 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
         return null;
     }
 
-    @Override
-    public ResponseBundle refresh(RequestBundle requestBundle) {
-        return null;
-    }
 
     @Override
-    public ResponseBundle reply(RequestBundle requestBundle) {
-        return null;
+    public boolean reply(RequestBundle requestBundle) {
+        return true;
     }
 
     @Override
