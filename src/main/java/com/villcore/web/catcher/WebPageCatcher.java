@@ -5,6 +5,7 @@ import java.util.Map;
 
 public interface WebPageCatcher {
 
+
     boolean needVerifyCode();
 
     ResponseBundle requestVerifyCode(RequestBundle requestBundle);

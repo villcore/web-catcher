@@ -73,11 +73,13 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
         return needVerifyCode;
     }
 
+    //TODO
     @Override
     public ResponseBundle requestVerifyCode(RequestBundle requestBundle) {
         return null;
     }
 
+    //TODO 可能需要修改接口
     @Override
     public boolean needLogin(ResponseBundle responseBundle) {
         return needLogin;
@@ -95,21 +97,19 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
 
     @Override
     public boolean login(RequestBundle requestBundle) {
-        //return checkLoginState();
-        return false;
+        //TODO request
+        ResponseBundle loginResp = null;
+        return checkLoginState(loginResp);
     }
 
-    private boolean checkLoginState() {
+    private boolean checkLoginState(ResponseBundle loginResp) {
+        //TODO check.
         return true;
     }
 
+    //TODO 核心请求方法
     @Override
     public ResponseBundle request(RequestBundle requestBundle) {
-        return null;
-    }
-
-    @Override
-    public List<Item> parseItems(ResponseBundle responseBundle) {
         return null;
     }
 
@@ -123,6 +123,10 @@ public class DefaultWebPageCatcher extends AbstractWebPageCatcher implements Run
         return null;
     }
 
+    @Override
+    public List<Item> parseItems(ResponseBundle responseBundle) {
+        return null;
+    }
 
     @Override
     public boolean reply(RequestBundle requestBundle) {

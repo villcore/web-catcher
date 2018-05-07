@@ -3,6 +3,8 @@ package com.villcore.web.catcher;
 import com.villcore.web.utils.BytesUtils;
 
 public class ResponseBundle {
+    public static ResponseBundle EMPTY_RESP = new ResponseBundle();
+
     private RequestBundle requestBundle;
     private byte[] respBytes;
     private String respHtml;
