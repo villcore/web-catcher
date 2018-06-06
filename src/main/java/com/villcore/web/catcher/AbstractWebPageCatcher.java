@@ -25,6 +25,7 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
     protected long pageNum = 1;
     protected volatile boolean finish;
     protected int emptyPageCount;
+    protected String verifyCode;
 
     protected ExecutorService executor;
     protected ScheduledExecutorService scheduledExecutor;
@@ -32,6 +33,13 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
 
     //stat, metrics
     private final long startup = System.currentTimeMillis();
+    private long lastCatchTime;
+    private long totalRequestPages;
+    private long totalRequestItems;
+    private Map<ContentTypeEnum, Long> contentTotal;
+
+    //stat, metrics
+    private final long startupTime = System.currentTimeMillis();
     private long lastCatchTime;
     private long totalRequestPages;
     private long totalRequestItems;
@@ -119,13 +127,14 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
         }
         if (emptyPageCount > 5) {
             stateEnum = CatcherStateEnum.FINISH;
+            catchPageFinish();
             return;
         }
 
         final AtomicInteger countDown = new AtomicInteger(itemList.size());
 
         for (Item item : itemList) {
-            final RequestBundle itemRequest = needReply() ? itemRequest(item) : itemRequestWithReply(item);
+            final RequestBundle itemRequest = !needReply() ? itemRequest(item) : itemRequestWithReply(item);
             scheduledExecutor.schedule(() -> {
                 requestItemTask(itemRequest, countDown);
             }, replyInterval(),TimeUnit.MILLISECONDS);
@@ -164,9 +173,9 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
     protected abstract void catchPageFinish();
 
     private int resetEmptyPage() {
-        emptyPage = 0;
-        return emptyPage;
-    };
+        emptyPageCount = 0;
+        return emptyPageCount;
+    }
 
     protected abstract void recordContents(Map<ContentTypeEnum, List<Content>> contents);
 
@@ -178,8 +187,6 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
 
     /**
      * wait util get input verify code.
-     *
-     * @return
      */
     protected abstract String getVerifyCode();
 
@@ -189,40 +196,40 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
 
     protected abstract long replyInterval();
 
-    public long getStartup() {
-        return startup;
+    public long getStartupTime() {
+        return startupTime;
     }
 
-    public long getLastCatch() {
-        return lastCatch;
+    public long getLastCatchTime() {
+        return lastCatchTime;
     }
 
-    public void setLastCatch(long lastCatch) {
-        this.lastCatch = lastCatch;
+    public void getLastCatchTime(long lastCatchTime) {
+        this.lastCatchTime = lastCatchTime;
     }
 
-    public long getRequestPages() {
-        return requestPages;
+    public long getTotalRequestPages() {
+        return totalRequestPages;
     }
 
-    public void setRequestPages(long requestPages) {
-        this.requestPages = requestPages;
+    public void setTotalRequestPages(long totalRequestPages) {
+        this.totalRequestPages = totalRequestPages;
     }
 
-    public long getRequestItems() {
-        return requestItems;
+    public long getTotalRequestItems() {
+        return totalRequestItems;
     }
 
-    public void setRequestItems(long requestItems) {
-        this.requestItems = requestItems;
+    public void setTotalRequestItems(long totalRequestItems) {
+        this.totalRequestItems = totalRequestItems;
     }
 
     public Map<ContentTypeEnum, Long> getContentCounts() {
-        return contentCounts;
+        return contentTotal;
     }
 
-    public void setContentCounts(Map<ContentTypeEnum, Long> contentCounts) {
-        this.contentCounts = contentCounts;
+    public void setContentCounts(Map<ContentTypeEnum, Long> contentTotal) {
+        this.contentTotal = contentTotal;
     }
 
     public CatcherStateEnum getStateEnum() {
