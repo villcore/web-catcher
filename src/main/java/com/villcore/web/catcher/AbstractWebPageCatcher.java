@@ -21,14 +21,6 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
         NEW, NEED_LOGIN, LOGIN_SUCESS, LOGIN_FAILED, NORMAL, EXPIRED, PAUSE, STOP, FINISH
     }
 
-    //stat, metrics
-    private final long startup = System.currentTimeMillis();
-    private long lastCatchTime;
-    private long totalRequestPages;
-    private long totalRequestItems;
-    private Map<ContentTypeEnum, Long> contentTotal;
-
-
     protected volatile CatcherStateEnum stateEnum = CatcherStateEnum.NEW;
     protected long pageNum = 1;
     protected volatile boolean finish;
@@ -36,6 +28,14 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
 
     protected ExecutorService executor;
     protected ScheduledExecutorService scheduledExecutor;
+    protected String verifyCode;
+
+    //stat, metrics
+    private final long startup = System.currentTimeMillis();
+    private long lastCatchTime;
+    private long totalRequestPages;
+    private long totalRequestItems;
+    private Map<ContentTypeEnum, Long> contentTotal;
 
     public AbstractWebPageCatcher(ExecutorService executor, ScheduledExecutorService scheduledExecutor) {
         this.executor = executor;
@@ -73,9 +73,7 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
         Outer:
         while (true) {
             pageResp = requestPage(pageRequest(page));
-            if (stateEnum == CatcherStateEnum.NEW
-                    || stateEnum == CatcherStateEnum.EXPIRED
-                    || stateEnum == CatcherStateEnum.LOGIN_FAILED) {
+            if (stateEnum == CatcherStateEnum.NEW || stateEnum == CatcherStateEnum.EXPIRED || stateEnum == CatcherStateEnum.LOGIN_FAILED) {
                 while (needLogin(pageResp) && loginRetry++ < 4) {
                     if (needVerifyCode()) {
                         LOGGER.info("need verifycode wait it.");
@@ -115,11 +113,11 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
 
         List<Item> itemList = parseItems(pageResp);
         if (itemList.isEmpty()) {
-            emptyPage++;
+            emptyPageCount++;
         } else {
             resetEmptyPage();
         }
-        if (emptyPage > 5) {
+        if (emptyPageCount > 5) {
             stateEnum = CatcherStateEnum.FINISH;
             return;
         }
@@ -132,7 +130,7 @@ public abstract class AbstractWebPageCatcher implements WebPageCatcher {
                 requestItemTask(itemRequest, countDown);
             }, replyInterval(),TimeUnit.MILLISECONDS);
         }
-        if (System.currentTimeMillis() - lastCatch > SESSION_EXPIRED_TIME_MS) {
+        if (System.currentTimeMillis() - lastCatchTime > SESSION_EXPIRED_TIME_MS) {
             stateEnum = CatcherStateEnum.EXPIRED;
         }
     }
