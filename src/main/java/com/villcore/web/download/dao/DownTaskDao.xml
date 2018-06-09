@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.villcore.web.download.dao.DownTaskDao">
+    <!--结果集-->
+    <resultMap id="downTask" type="com.villcore.web.download.DownTask">
+        <id column="id" property="cusId" javaType="int"></id>
+        <result column="name" property="name" javaType="string"/>
+        <result column="url" property="url" javaType="String"/>
+        <result column="state" property="state" javaType="int"/>
+        <result column="total_file_len" property="totalFileLen" javaType="long"/>
+        <result column="has_down_bytes" property="hasDownBytes" javaType="long"/>
+    </resultMap>
+
+    <!--&lt;!&ndash;表名&ndash;&gt;-->
+    <!--<sql id="sql_tab">cus_base_info</sql>-->
+
+    <!--&lt;!&ndash;查询所有字段&ndash;&gt;-->
+    <!--<sql id="sql_select_all">select * from </sql>-->
+
+    <!--&lt;!&ndash;查询所有客户基础信息&ndash;&gt;-->
+    <!--<select id="getAllCusBaseInfo" resultMap="cus_base_info">-->
+        <!--<include refid="sql_select_all"/>-->
+        <!--<include refid="sql_tab"/>-->
+    <!--</select>-->
+
+    <insert id="saveDownTask" parameterType="DownTask">
+        insert into t_down_task (name, url, state, total_file_len, has_down_bytes) values(#{name},#{url},#{state},#{totalFileLen},#{hasDownBytes})
+    </insert>
+
+    <!--&lt;!&ndash;根据客户ID获取客户基础信息&ndash;&gt;-->
+    <!--<select id="getCusBaseInfoById" resultMap="cus_base_info">-->
+        <!--<include refid="sql_select_all"/>-->
+        <!--<include refid="sql_tab"/>-->
+        <!--<where>cus_id = #{cusId}</where>-->
+    <!--</select>-->
+
+    <!--&lt;!&ndash;-根据客户名称获取客户基础信息&ndash;&gt;-->
+    <!--<select id="getCusBaseInfoByName" resultMap="cus_base_info">-->
+        <!--<include refid="sql_select_all"/>-->
+        <!--<include refid="sql_tab"/>-->
+        <!--<where>cus_name = #{cusName}</where>-->
+    <!--</select>-->
+
+    <!--&lt;!&ndash;修改客户信息&ndash;&gt;-->
+    <!--<update id="updateCusBaseInfo" parameterType="CusBaseInfo">-->
+        <!--update <include refid="sql_tab"/>-->
+        <!--<set>-->
+            <!--cus_id = #{cusId}-->
+            <!--<if test="null!=cusCode and ''!=cusCode">,cus_code=#{cusCode}</if>-->
+            <!--<if test="null!=cusName and ''!=cusName">,cus_name=#{cusName}</if>-->
+            <!--<if test="null!=cusAbbr and ''!=cusAbbr">,cus_abbr=#{cusAbbr}</if>-->
+            <!--<if test="null!=address and ''!=address">,address=#{address}</if>-->
+        <!--</set>-->
+        <!--<where>-->
+            <!--cus_id=#{cusId}-->
+        <!--</where>-->
+    <!--</update>-->
+
+    <!--&lt;!&ndash;根据客户ID删除客户信息&ndash;&gt;-->
+    <!--<delete id="deleteCusBaseInfo" parameterType="String">-->
+        <!--delete from <include refid="sql_tab"/>-->
+        <!--<where>-->
+            <!--cus_id=#{cusId}-->
+        <!--</where>-->
+    <!--</delete>-->
+
+    <!--&lt;!&ndash;根据客户ID批量删除客户信息&ndash;&gt;-->
+    <!--<delete id="deleteBatchCusBaseInfo" parameterType="String">-->
+        <!--delete from <include refid="sql_tab"/>-->
+        <!--<where>-->
+            <!--cus_id in-->
+            <!--<foreach collection="array" item="cusId" open="(" separator="," close=")">-->
+                <!--#{cusId}-->
+            <!--</foreach>-->
+        <!--</where>-->
+    <!--</delete>-->
+</mapper>

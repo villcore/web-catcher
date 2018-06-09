@@ -5,8 +5,6 @@ import java.util.Map;
 
 public interface WebPageCatcher {
 
-    Page nextPage();
-
     boolean needVerifyCode();
 
     ResponseBundle requestVerifyCode(RequestBundle requestBundle);
@@ -15,21 +13,19 @@ public interface WebPageCatcher {
 
     boolean login(RequestBundle requestBundle);
 
-    boolean needReply();
-
-    long replyInterval();
-
     ResponseBundle request(RequestBundle requestBundle);
 
-    List<Item> parseItems(ResponseBundle responseBundle);
+    Page nextPage();
 
     ResponseBundle requestPage(RequestBundle requestBundle);
 
     ResponseBundle requestItem(RequestBundle requestBundle);
 
-    ResponseBundle refresh(RequestBundle requestBundle);
+    List<Item> parseItems(ResponseBundle responseBundle);
 
-    ResponseBundle reply(RequestBundle requestBundle);
+    boolean needReply();
+
+    boolean reply(RequestBundle requestBundle);
 
     Map<ContentTypeEnum, List<Content>> parseContent(ResponseBundle responseBundle);
 
