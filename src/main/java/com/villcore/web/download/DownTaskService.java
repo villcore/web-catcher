@@ -11,5 +11,17 @@ public interface DownTaskService {
 
     List<DownTask> listTask(int offset, int pageNum);
 
+    List<DownTask> listPendingTask(int offset, int pageNum);
+
+    DownTask startTask(int taskId);
+
     DownTask getTask(int taskId);
+
+    DownTask cancelTask(int taskId);
+
+    DownTask pauseTask(int taskId);
+
+    DownTask resumeTask(int taskId);
+
+    DownTask deleteTask(int taskId);
 }
