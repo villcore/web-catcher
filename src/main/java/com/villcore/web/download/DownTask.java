@@ -1,6 +1,8 @@
 package com.villcore.web.download;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -14,6 +16,9 @@ public class DownTask implements Serializable {
     private int state;
     private long totalFileLen;
     private volatile long hasDownBytes;
+    private long submitTimestamp;
+    private long finishTimestamp;
+    private Map<String, Object> attr = new HashMap<>();
 
     public int getId() {
         return id;
@@ -63,22 +68,28 @@ public class DownTask implements Serializable {
         this.hasDownBytes = hasDownBytes;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DownTask downTask = (DownTask) o;
-        return id == downTask.id &&
-                totalFileLen == downTask.totalFileLen &&
-                hasDownBytes == downTask.hasDownBytes &&
-                Objects.equals(name, downTask.name) &&
-                Objects.equals(url, downTask.url) &&
-                state == downTask.state;
+    public long getSubmitTimestamp() {
+        return submitTimestamp;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, url, state, totalFileLen, hasDownBytes);
+    public void setSubmitTimestamp(long submitTimestamp) {
+        this.submitTimestamp = submitTimestamp;
+    }
+
+    public long getFinishTimestamp() {
+        return finishTimestamp;
+    }
+
+    public void setFinishTimestamp(long finishTimestamp) {
+        this.finishTimestamp = finishTimestamp;
+    }
+
+    public Map<String, Object> getAttr() {
+        return attr;
+    }
+
+    public void setAttr(Map<String, Object> attr) {
+        this.attr = attr;
     }
 
     @Override
@@ -90,6 +101,31 @@ public class DownTask implements Serializable {
                 ", state=" + state +
                 ", totalFileLen=" + totalFileLen +
                 ", hasDownBytes=" + hasDownBytes +
+                ", submitTimestamp=" + submitTimestamp +
+                ", finishTimestamp=" + finishTimestamp +
+                ", attr=" + attr +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DownTask downTask = (DownTask) o;
+        return id == downTask.id &&
+                state == downTask.state &&
+                totalFileLen == downTask.totalFileLen &&
+                hasDownBytes == downTask.hasDownBytes &&
+                submitTimestamp == downTask.submitTimestamp &&
+                finishTimestamp == downTask.finishTimestamp &&
+                Objects.equals(name, downTask.name) &&
+                Objects.equals(url, downTask.url) &&
+                Objects.equals(attr, downTask.attr);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(id, name, url, state, totalFileLen, hasDownBytes, submitTimestamp, finishTimestamp, attr);
     }
 }

@@ -1,5 +1,6 @@
 package com.villcore.web.download;
 
+import com.villcore.web.download.dao.DownTaskDao;
 import com.villcore.web.utils.JsonUtils;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -29,23 +30,31 @@ public class DownloadRunner implements Runnable {
     private volatile boolean running = false;
     private CountDownLatch stopLatch;
 
+    private DownTaskManager downTaskManager;
+    private DownTaskDao downTaskDao;
+
+    public DownloadRunner(DownTask downTask, DownTaskManager downTaskManager, DownTaskDao downTaskDao) {
+        this.downTask = downTask;
+        this.downTaskManager = downTaskManager;
+        this.downTaskDao = downTaskDao;
+    }
 
     @Override
     public void run() {
-        String taskId = "1";
-        String taskUrl = "https://codeload.github.com/square/tape/zip/master";
+        String taskId = downTask.getId() + "";
+        String taskUrl = downTask.getUrl();
 
-        DownTaskConfig downTaskConfig = null;
-        try {
-            downTaskConfig = createOrGetConfig(taskId, taskUrl);
-        } catch (IOException e) {
-            LOG.error("start down task runner error.", e);
-        }
+//        DownTaskConfig downTaskConfig = null;
+//        try {
+//            downTaskConfig = createOrGetConfig(taskId, taskUrl);
+//        } catch (IOException e) {
+//            LOG.error("start down task runner error.", e);
+//        }
 
         if (running) {
-            if (downTaskConfig == null) {
-                return;
-            }
+//            if (downTaskConfig == null) {
+//                return;
+//            }
 
             try {
                 OkHttpClient okHttpClient = new OkHttpClient.Builder()
@@ -53,8 +62,9 @@ public class DownloadRunner implements Runnable {
                         .writeTimeout(1L, TimeUnit.MINUTES)
                         .build();
 
-                List<Long> hasDownBytes = downTaskConfig.getHasDownBytes();
-                long startPos = hasDownBytes.isEmpty() ? 0 : hasDownBytes.get(0);
+//                List<Long> hasDownBytes = downTaskConfig.getHasDownBytes();
+//                long startPos = hasDownBytes.isEmpty() ? 0 : hasDownBytes.get(0);
+                long startPos = 0;
                 Request request = new Request.Builder()
                         .get()
                         .url(taskUrl)
@@ -63,33 +73,58 @@ public class DownloadRunner implements Runnable {
 
                 Response response = okHttpClient.newCall(request).execute();
                 long contentLen = response.body().contentLength();
-                String fileDetail = response.header("Content-Disposition");
-                String fileName = fileDetail.replace("filename=", "").replace("attachment;", "").trim();
-                downTaskConfig.setTotalFileLen(contentLen);
-                //downTask set len
+//                downTaskConfig.setTotalFileLen(contentLen);
+                String[] paths = downTask.getUrl().split("/");
+                String fileName = paths.length > 1 ? paths[paths.length - 1] : taskId;
+                try {
+                    String fileDetail = response.header("Content-Disposition");
+                    fileName = fileDetail.replace("filename=", "").replace("attachment;", "").trim();
+                } catch (Exception e) {
+                    LOG.warn("can not parse file name.", e);
+                }
 
-                byte[] buffer = new byte[128 * 1024]; //128K
+                downTask.setName(fileName);
+                downTask.setTotalFileLen(contentLen);
+                downTaskDao.updateDownTask(downTask);
+
+                byte[] buffer = new byte[1024 * 1024]; //128K
                 int pos = -1;
 
                 try (InputStream is = response.body().byteStream();
                      RandomAccessFile os = getOrCreateFileDataStream(fileName, startPos)) {
+                    int flushCount = 0;
                     while ((pos = is.read(buffer)) > 0 && running) {
                         os.write(buffer, 0, pos);
                         startPos += pos;
-                        downTaskConfig.setHasDownBytes(Collections.singletonList(startPos));
+//                        downTaskConfig.setHasDownBytes(Collections.singletonList(startPos));
+                        if (flushCount++ > 100) {
+                            DownBytesCache.incDownBytes(downTask, startPos);
+                            flushCount = 0;
+                        }
                     }
+                    downTask.setHasDownBytes(startPos);
+//                    downTaskDao.updateDownTask(downTask);
+                    downTask.setState(2);
+                    downTaskDao.updateDownTask(downTask);
+                    downTaskManager.removeDownloadRunner(downTask);
                     //TODO downTask setState
                 } catch (IOException e) {
-                    LOG.error("download error.", e);
+                    LOG.error("download [{}] error.", downTask, e);
+                    downTask.setState(3);
+                    downTaskDao.updateDownTask(downTask);
+                    downTaskManager.removeDownloadRunner(downTask);
                     //TODO downTask setState
                 }
             } catch (Exception e) {
-                LOG.error("down error.", e);
+                LOG.error("download [{}] error.", downTask, e);
+                downTask.setState(3);
+                downTaskDao.updateDownTask(downTask);
+                downTaskManager.removeDownloadRunner(downTask);
             } finally {
                 try {
                     Path configPath = Paths.get("config" + File.separator + taskId);
-                    writeConfig(configPath, downTaskConfig);
-                } catch (IOException e) {
+//                    writeConfig(configPath, downTaskConfig);
+                } catch (Exception e) {
                     LOG.error("write down config error.", e);
                 }
             }
@@ -112,6 +147,7 @@ public class DownloadRunner implements Runnable {
     public void start() {
         running = true;
         stopLatch = new CountDownLatch(1);
+        new Thread(this, "DownloadRunner").start();
     }
 
     public void stop() {
@@ -151,12 +187,5 @@ public class DownloadRunner implements Runnable {
         byte[] bytes = Files.readAllBytes(configPath);
         String configJson = new String(bytes, CHARSET);
         return JsonUtils.toObject(configJson, DownTaskConfig.class);
-    }
-
-    public static void main(String[] args) {
-        DownloadRunner runner = new DownloadRunner();
-        runner.start();
-        Thread t = new Thread(runner);
-        t.start();
     }
 }
