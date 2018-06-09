@@ -11,7 +11,7 @@ public class DownTask implements Serializable {
     private int id;
     private String name;
     private String url;
-    private DownTaskStateEnum state;
+    private int state;
     private long totalFileLen;
     private volatile long hasDownBytes;
 
@@ -39,11 +39,11 @@ public class DownTask implements Serializable {
         this.url = url;
     }
 
-    public DownTaskStateEnum getState() {
+    public int getState() {
         return state;
     }
 
-    public void setState(DownTaskStateEnum state) {
+    public void setState(int state) {
         this.state = state;
     }
 

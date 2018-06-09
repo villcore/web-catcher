@@ -28,7 +28,7 @@ public class DownTaskManager {
 
     //task resume, close connection, save offset.
 
-    @Autowired
+    //@Autowired
     DownTaskService downTaskService;
 
     private Map<DownTask, DownloadRunner> downloadRunnerMap = new ConcurrentHashMap<>();
