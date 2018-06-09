@@ -1,4 +1,6 @@
-package com.villcore.web.download;
+package com.villcore.web.download.service;
+
+import com.villcore.web.download.DownTask;
 
 import java.util.List;
 
@@ -7,7 +9,7 @@ import java.util.List;
  */
 public interface DownTaskService {
 
-    boolean addTask(DownTask task);
+    DownTask addTask(DownTask task);
 
     List<DownTask> listTask(int offset, int pageNum);
 

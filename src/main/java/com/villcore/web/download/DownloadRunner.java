@@ -29,13 +29,15 @@ public class DownloadRunner implements Runnable {
     private volatile boolean running = false;
     private CountDownLatch stopLatch;
 
+
     @Override
     public void run() {
-        String taskName = "";
-        String taskUrl = "";
+        String taskId = "1";
+        String taskUrl = "https://codeload.github.com/square/tape/zip/master";
+
         DownTaskConfig downTaskConfig = null;
         try {
-            downTaskConfig = createOrGetConfig(taskName, taskUrl);
+            downTaskConfig = createOrGetConfig(taskId, taskUrl);
         } catch (IOException e) {
             LOG.error("start down task runner error.", e);
         }
@@ -62,12 +64,13 @@ public class DownloadRunner implements Runnable {
                 Response response = okHttpClient.newCall(request).execute();
                 long contentLen = response.body().contentLength();
                 String fileDetail = response.header("Content-Disposition");
-                String fileName = fileDetail.replace("filename=", "");
+                String fileName = fileDetail.replace("filename=", "").replace("attachment;", "").trim();
                 downTaskConfig.setTotalFileLen(contentLen);
                 //downTask set len
 
                 byte[] buffer = new byte[128 * 1024]; //128K
                 int pos = -1;
+
                 try (InputStream is = response.body().byteStream();
                      RandomAccessFile os = getOrCreateFileDataStream(fileName, startPos)) {
                     while ((pos = is.read(buffer)) > 0 && running) {
@@ -75,14 +78,16 @@ public class DownloadRunner implements Runnable {
                         startPos += pos;
                         downTaskConfig.setHasDownBytes(Collections.singletonList(startPos));
                     }
+                    //TODO downTask setState
                 } catch (IOException e) {
                     LOG.error("download error.", e);
+                    //TODO downTask setState
                 }
             } catch (Exception e) {
                 LOG.error("down error.", e);
             } finally {
                 try {
-                    Path configPath = Paths.get("config" + File.separator + taskName);
+                    Path configPath = Paths.get("config" + File.separator + taskId);
                     writeConfig(configPath, downTaskConfig);
                 } catch (IOException e) {
                     LOG.error("write down config error.", e);
@@ -93,10 +98,15 @@ public class DownloadRunner implements Runnable {
     }
 
     private RandomAccessFile getOrCreateFileDataStream(String fileName, long startPos) throws IOException {
-        Path dataPath = Paths.get(File.separator + "home" + File.separator + fileName);
-        RandomAccessFile dataFile = new RandomAccessFile(dataPath.toFile(), "rw");
-        dataFile.seek(startPos);
-        return dataFile;
+        Path dataPath = Paths.get( "data" + File.separator + fileName);
+        File dataFile = dataPath.toFile();
+        if (!dataFile.exists()) {
+            dataFile.getParentFile().mkdirs();
+            dataFile.createNewFile();
+        }
+        RandomAccessFile dataFileStream = new RandomAccessFile(dataPath.toFile(), "rw");
+        dataFileStream.seek(startPos);
+        return dataFileStream;
     }
 
     public void start() {
@@ -119,6 +129,7 @@ public class DownloadRunner implements Runnable {
         Path configPath = Paths.get("config" + File.separator + taskName);
         File configFile = configPath.toFile();
         if (!configFile.exists()) {
+            configFile.getParentFile().mkdirs();
             configFile.createNewFile();
             DownTaskConfig downTaskConfig = new DownTaskConfig();
             downTaskConfig.setConfigPath(configPath);
@@ -140,5 +151,12 @@ public class DownloadRunner implements Runnable {
         byte[] bytes = Files.readAllBytes(configPath);
         String configJson = new String(bytes, CHARSET);
         return JsonUtils.toObject(configJson, DownTaskConfig.class);
+    }
+
+    public static void main(String[] args) {
+        DownloadRunner runner = new DownloadRunner();
+        runner.start();
+        Thread t = new Thread(runner);
+        t.start();
     }
 }

@@ -1,5 +1,6 @@
 package com.villcore.web.download;
 
+import com.villcore.web.download.service.DownTaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

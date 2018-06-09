@@ -1,4 +1,4 @@
-package com.villcore.web.dao;
+package com.villcore.web.catcher.dao;
 
 public class ItemDAO {
     //exist
